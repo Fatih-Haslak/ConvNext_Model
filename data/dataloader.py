@@ -20,7 +20,7 @@ class CustomDataset(Dataset):
         for class_name in self.classes:
             class_path = os.path.join(self.root_dir, class_name)
             for filename in os.listdir(class_path):
-                if filename.endswith(".jpg"):
+                if filename.endswith(".jpg") or filename.endswith(".png"):
                     img_path = os.path.join(class_path, filename)
                     label = (self.class_to_idx[class_name])
                     data.append((img_path, label))
@@ -42,8 +42,11 @@ class Dataloader:
     def __init__(self, root_folder,batch_size):
         self.root_folder = root_folder
         self.batch_size= batch_size
+        
         self.transform = transforms.Compose([
-            transforms.Resize((128, 128)),
+            transforms.Resize((256, 256)),
+            transforms.CenterCrop(224),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
@@ -59,13 +62,14 @@ class Dataloader:
         train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
 
         # Dataloader'ları oluşturun
-        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
-        val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=4)
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=8,pin_memory=True)
+        val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=8,pin_memory=True)
 
         return train_dataloader, val_dataloader
     
 #path=r"C:\Users\90546\Desktop\multı_clas\seg_train"
 #num_classes
+
 """
 {'buildings' -> 0,
 'forest' -> 1,
@@ -74,3 +78,4 @@ class Dataloader:
 'sea' -> 4,
 'street' -> 5 }
 """
+#https://pytorch-lightning.readthedocs.io/en/1.4.9/guides/speed.html#gpu-tpu-training
